@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+# 리소스 종류로 Deployment 를 의미한다. Deployment 는 배포 리비젼관리 및 ReplicaSet 을 함께 포함한다. 
+kind: Deployment
+metadata:
+  # 디플로이먼트의 이름 
+  name:  MYAPP
+  # 디플로이먼트가 배포될 네임스페이스 
+  namespace: default
+  # 디플로이먼트의 레이블 
+  labels:
+    app:  MYAPP
+# 배포 스펙 
+spec:
+  # 배포 대상으로 작업할 대상 템플릿을 찾는다. 
+  selector:
+    # 매치되는 레이블 찾기 조건이다. 
+    matchLabels:
+      app: MYAPP
+  # 복제계수 (pod를 몇개 유지할지 정보 )
+  replicas: 1
+  # 배포 전략을 나타낸다. 
+  strategy:
+    # 기본적으로 배포 전략은 롤링 업데이트이다. 
+    rollingUpdate:
+      # 최대로 증가될 수 있는 pod의 비율이다. 4개의 pod가 동작하다고 있다면 --> 배포시에는 5개(25% = 1)가 된다. 
+      maxSurge: 25%
+      # 줄어들 수 있는 pod의 비율이다. 4개의 pod가 동작하고 있다면 --> 배포시에는 3개(25% = 1)가 된다. 
+      maxUnavailable: 25%
+    # 업데이트 전략: RollingUpdate 이다. 
+    type: RollingUpdate
+  # 배포될 템플릿을 정의한다. 
+  template:
+    metadata:
+      labels:
+        app:  MYAPP
+    # 배포될 컨테이너의 스펙이다. 
+    spec:
+      # initContainers:
+        # Init containers are exactly like regular containers, except:
+          # - Init containers always run to completion.
+          # - Each init container must complete successfully before the next one starts.
+      # 컨테이너 정보를 지정한다. 
+      containers:
+      # 컨테이너 이름 
+      - name:  MYAPP
+        # 컨테이너 이미지 
+        image:  MYAPP:latest
+        # 컨테이너가 사용할 리소스 정의를 지정한다. 
+        resources:
+          # 최소 필요 리소스 정보 
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          # 최대 필요 리소스 정보 
+          limits:
+            cpu: 100m
+            memory: 100Mi
+        # Pod가 정상으로 올라왔는지 검사하는 검증을 지정한다. 
+        livenessProbe:
+          # 검증시 tcpSocket으로 지정한다. 
+          tcpSocket:
+            port: 80
+          # 검증을 수행할때 초기 대기 시간 5초 대기후 livenessProbe를 수행한다. 
+          initialDelaySeconds: 5
+          # 타임아웃으로 인지할 초를 지정한다. (5초)
+          timeoutSeconds: 5
+          # 성공으로 취급할 회수 (1회)
+          successThreshold: 1
+          # 실패로 인지할 회수 (3회)
+          failureThreshold: 3
+          # 반복 주기 (10초)
+          periodSeconds: 10
+        # Pod가 등록되고 서비스를 할 수 있는지 여부를 검증 
+        readinessProbe:
+          # 검증을 위한 endpoint경로 
+          httpGet:
+            # 엔드포인트 uri
+            path: /_status/healthz
+            # 엔드포인트 포트 
+            port: 80
+          # 검증을 수행할때 초기 대기 시간 5초 대기후 livenessProbe를 수행한다. 
+          initialDelaySeconds: 5
+          # 타임아웃으로 인지할 초를 지정한다. (2초)
+          timeoutSeconds: 2
+          # 성공으로 취급할 회수 (1회)
+          successThreshold: 1
+          # 실패로 인지할 회수 (3회)
+          failureThreshold: 3
+          # 반복 주기 (10초)
+          periodSeconds: 10
+        # pod환경변수 지정 
+        env:
+        # 환경변수 이름 
+        - name: DB_HOST
+          # 환경변수값을 어디서 가져올지 지정하낟. 
+          valueFrom:
+            # 환경변수를 configMapKeyRef으로 지정하여 configMap에서 가져온다. 
+            configMapKeyRef:
+              # configMap의 이름
+              name: MYAPP
+              # configMap 이름내의 설정값의 키 
+              key: DB_HOST
+        # 포트 
+        ports:
+        # 컨테이너 포트 번호 
+        - containerPort:  80
+          # 포트 이름 
+          name:  MYAPP
+        # 볼륨마운트 이름 
+        volumeMounts:
+        # 연결할 볼륨 
+        - name: localtime
+          # 컨테이너내의 패스 정보 
+          mountPath: /etc/localtime
+      # 볼륨 지정 
+      volumes:
+        # 보륨 이름 
+        - name: localtime
+          # 호스트 패스 
+          hostPath:
+            # pod가 배치되는 호스트의 경로 
+            path: /usr/share/zoneinfo/Asia/Shanghai
+      # 재 시작 여부(Always: 항상리스타트, )
+      restartPolicy: Always

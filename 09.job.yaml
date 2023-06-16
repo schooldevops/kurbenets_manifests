@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+# Job은 배치로 수행되는 작업임을 나타내는 객체이다. 
+kind: Job
+# 메타정보를 설정한다. 
+metadata:
+  name: MYAPP
+  namespace: default
+  labels:
+    app: MYAPP
+# 스펙을 설정한다. 
+spec:
+  # 스펙의 템플릿 지정 이름, 대상 레이블 
+  template:
+    metadata:
+      name: MYAPP
+      labels:
+        app: MYAPP
+    # 내부 컨테이너 스펙을 지정한다. 
+    spec:
+      # 컨테이너 설정영역 
+      containers:
+      # 컨테이너 이름 
+      - name: MYAPP
+        # 이미지 이름 
+        image: python:3.7.6-alpine3.10
+        # 이미지를 다운받고 실행할 커맨드를 지정한다. 
+        command: ['sh', '-c', 'python3 manage.py makemigrations && python3 manage.py migrate']
+        # pod가 수행될 환경변수 지정 
+        env:
+        # 환경변수 이름/값 지정 
+        - name: ENV_NAME
+          value: ENV_VALUE
+        # 배치의 볼륨 마운트를 수행한다. 
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+      # 바인딩될 볼륨 정보 설정 
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai
+      # 재시작 정책 (OnFailure는 실패시에만 재시작하도록 한다. )
+      # Always: 항상 재시작 한다. 
+      # OnFailure: 실패시에만 재시작한다. 
+      # Never: 재시작을 하지 않는다. 
+      restartPolicy: OnFailure
+      # Dns정책은 ClusterFirst로 클러스터 우선이다. 
+      dnsPolicy: ClusterFirst

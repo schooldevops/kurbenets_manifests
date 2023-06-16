@@ -1,0 +1,12 @@
+apiVersion: v1
+# 리소스 타입 
+kind: ConfigMap
+# ConfigMap의 메타정보 
+metadata:
+  # 이름 
+  name: CM
+  # 네임스페이스 
+  namespace: default
+# configmap에 저장될 키/값 쌍 
+data:
+  key: default

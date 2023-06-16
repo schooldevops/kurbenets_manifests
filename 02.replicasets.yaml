@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+# Kubernetes의 리소스 종류이며 ReplicaSet은 Pod가 복제될 계수이다. 즉 몇개의 Pod가 뜰지 여부를 나타낸다.
+kind: ReplicaSet
+metadata:
+  # ReplicaSet의 이름
+  name: MYAPP
+  # ReplicaSet의 Label이다. 
+  labels:
+    app: MYAPP
+spec:
+  # 생성될 Pod의 복제 계수, 이 값을 유지하기 위해서 Kubernetes 가 Pod의 수를 관리한다. 
+  replicas: 3
+  # ReplicaSet을 적용할 대상 컨테이너 정보를 찾을 매치 조건이다. 
+  selector:
+    # Pod를 찾기 위해 매치 조건을 작성한다. app: MYAPP로 정의된 템플릿을 찾는다. 
+    matchLabels:
+      app: MYAPP
+  # 복제를 적용할 Pod의 템플릿이다.     
+  template:
+    metadata:
+      # 이전에 selector에 의해서 찾아지는 app: MYAPP이다. 
+      labels:
+        app: MYAPP
+    # Pod의 스펙을 정의한다. 
+    spec:
+      # 대상 컨테이너 정보 
+      containers:
+      # 컨테이너 이름
+      - name: MYAPP
+        # 컨테이너 이미지 
+        image: nginx/nginx
+        # 컨테이너 포트 
+        ports:
+        # 포트 이름 
+        - name: web
+          # 컨테이너 내부의 포트 
+          containerPort:  80
+          # 포트에 연결될 네트워크 프로토콜 
+          protocol: TCP
+        # POD가 사용할 환경 변수 
+        env:
+        # 환경변수 이름 
+        - name: NGX_VERSION
+          # 환경변수 값 
+          value: 1.16.1
+        # 볼륨 마운트될 대상 
+        volumeMounts:
+        # 볼륨마운트 이름 
+        - name: localtime
+          # 마운트될 컨테이너 내부의 패스 
+          mountPath: /etc/localtime
+      # 볼륨 
+      volumes:
+        # volumeMounts가 찾을 볼륨 이름 
+        - name: localtime
+          # pod가 떠 있는 노드의 로컬 경로 패스 
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai

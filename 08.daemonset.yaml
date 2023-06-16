@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+# DaemonSet은 클러스터의 각 노드마다 오직 1개만 설치되는 Pod를 나타낸다. 
+kind: DaemonSet
+# 메타정보 
+metadata:
+  # 데몬셋의 이름 
+  name: MYAPP
+  # 위치할 네임스페이스 
+  namespace: default
+  # 식별자
+  labels:
+    app: MYAPP
+# 스펙을 지정한다. 
+spec:
+  # 데몬셋으로 사용할 pod찾는 조건 
+  selector:
+    matchLabels:
+      app: MYAPP
+  # 템플릿 정보 pod의 템플릿이다. 
+  template:
+    metadata:
+      labels:
+        app: MYAPP
+    spec:
+      tolerations:
+      # 이 toleration은 daemonset이 마스터 노드에서 수행되도록 한다.
+      # 마스터 pod를 수행할 수없으면 삭제한다. 
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      # 컨테이너 정보 
+      containers:
+      # 컨테이너 이름 
+      - name: MYAPP
+        # 이미지 
+        image: debian
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+      # graceful 종료를 위해 대기할 수 있는 시간 30초로 설정하고 있다. 
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /usr/share/zoneinfo/Asia/Shanghai

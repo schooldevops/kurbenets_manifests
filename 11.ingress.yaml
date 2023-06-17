@@ -1,16 +1,28 @@
 # https://kubernetes.io/docs/concepts/services-networking/ingress/#the-ingress-resource
 
 apiVersion: networking.k8s.io/v1
+# Ingress 는 외부 요청을 내부 서비스로 연결시켜주는 라우팅 역할을 한다. 
 kind: Ingress
+# 메타정보 이름, 설치될 네임스페이스 
 metadata:
   name: IngressName
   namespace: default
+# 인그레스 스펙 지정 
 spec:
+  # 라우팅 규칙을 지정한다. 
   rules:
+  # 요청으로 들어올 호스트 이름 
   - host: foo.bar.com
+    # http 프로토콜에 대한 규칙을 지정한다. 
     http:
+      # 라우팅 검사 패스 정보 (배열로 계속해서 지정하면 된다.)
       paths:
+      # 검색할 uri 경로 
       - path: /
+        # uri패스 매치 정보를 확인한다. 
+        # Prefix: 앞자리 매칭 
+        # ImplementationSpecific: 별도의 pathType으로 처리하거나 Prefix 또는 Exact경로 유형과 동일하게 처리 가능 
+        # Exact: URI가 정확하게 일치하는지 검사, 대소문자 구분한다. 
         pathType: Prefix
         backend:
           service:
